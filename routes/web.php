@@ -28,9 +28,7 @@ Route::resource('eventos', EventoController::class);
 Route::resource('entregas', EntregaController::class);
 Route::resource('pedidos', PedidoController::class);
 Route::resource('mensajes_wp', MensajeWpController::class);
-
+Route::get('/obtener-productos', [PedidoController::class, 'obtenerProductos'])->name('obtener-productos');
 Route::get('/', [App\Http\Controllers\HomeController::class, 'index'])->name('home');
 
-/*Route::get('/', function () {
-    return view('welcome');
-});*/
+

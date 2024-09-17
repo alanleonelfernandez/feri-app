@@ -15,7 +15,7 @@ class ProductoController extends Controller
     {
         $query = Producto::with('categoria');
 
-        // Aplicar filtros
+        //Aplicar filtros en index
         if ($request->filled('sku')) {
             $query->where('sku', 'like', '%' . $request->sku . '%');
         }
@@ -32,13 +32,42 @@ class ProductoController extends Controller
             $query->where('estado', $request->estado);
         }
 
-        // Obtener resultados paginados (10 por página)
+        //Obtener resultados paginados(10 por página)
         $productos = $query->paginate(10)->appends($request->all());
 
-        // Obtener todas las categorías para el filtro
+        //Obtener todas las categorías para el filtro
         $categorias = Categoria::all();
 
         return view('productos.index', compact('productos', 'categorias'));
+    }
+
+    public function search(Request $request)
+    {
+        $query = $request->get('query');
+        $productos = Producto::where('descripcion', 'LIKE', "%{$query}%")
+            ->where('stock', '>', 0)
+            ->get();
+
+        $output = '';
+
+        if (count($productos) > 0) {
+            foreach ($productos as $producto) {
+                $output .= '
+                    <div>
+                        <button type="button" class="agregar-producto" 
+                                data-id="' . $producto->id . '"
+                                data-nombre="' . $producto->descripcion . '"
+                                data-stock="' . $producto->stock . '">
+                            ' . $producto->descripcion . ' (Stock: ' . $producto->stock . ')
+                        </button>
+                    </div>
+                ';
+            }
+        } else {
+            $output .= '<p>No se encontraron productos</p>';
+        }
+
+        return $output;
     }
 
     /**
@@ -55,7 +84,7 @@ class ProductoController extends Controller
      */
     public function store(Request $request)
     {
-        // Validar los datos de entrada
+        //Validar los datos de entrada
         $request->validate([
             'sku' => 'required|string|max:255|unique:productos,sku',
             'descripcion' => 'nullable|string',
@@ -69,10 +98,9 @@ class ProductoController extends Controller
             'estado' => 'required|boolean',
         ]);
 
-        // Crear el producto
+        //Crear el producto
         Producto::create($request->all());
 
-        // Redirigir con mensaje de éxito
         return redirect()->route('productos.index')->with('success', 'Producto creado exitosamente.');
     }
 
@@ -90,7 +118,7 @@ class ProductoController extends Controller
      */
     public function update(Request $request, Producto $producto)
     {
-        // Validar los datos de entrada
+        //Validar los datos de entrada
         $request->validate([
             'sku' => 'required|string|max:255|unique:productos,sku,' . $producto->id,
             'descripcion' => 'nullable|string',
@@ -104,10 +132,9 @@ class ProductoController extends Controller
             'estado' => 'required|boolean',
         ]);
 
-        // Actualizar el producto
+        //Actualizar el producto
         $producto->update($request->all());
 
-        // Redirigir con mensaje de éxito
         return redirect()->route('productos.index')->with('success', 'Producto actualizado exitosamente.');
     }
 
@@ -116,10 +143,14 @@ class ProductoController extends Controller
      */
     public function destroy(Producto $producto)
     {
-        // Eliminar el producto
         $producto->delete();
 
-        // Redirigir con mensaje de éxito
         return redirect()->route('productos.index')->with('success', 'Producto eliminado exitosamente.');
+    }
+
+    public function obtenerProductos()
+    {
+        $productos = Producto::orderBy('descripcion', 'asc')->get(['id', 'descripcion', 'sku', 'precio_venta', 'stock']);
+        return response()->json($productos);
     }
 }

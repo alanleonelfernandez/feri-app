@@ -16,7 +16,7 @@ return new class extends Migration
             $table->foreignId('id_cliente')->constrained('clientes');
             $table->tinyInteger('pago')->default(0);
             $table->string('forma_pago');
-            $table->date('fecha_pedido');
+            $table->date('fecha_pedido')->default(DB::raw('CURRENT_DATE'));
             $table->foreignId('id_evento')->nullable()->constrained('evento');
             $table->foreignId('id_entrega')->nullable()->constrained('entregas');
             $table->boolean('estado')->default(1);
